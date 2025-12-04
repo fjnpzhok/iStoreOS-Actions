@@ -18,14 +18,9 @@ on:
         description: '请输入默认网关（静态地址时必填）'
         required: true
         default: '192.168.5.1'
-      include_docker:
-        description: "是否集成Docker插件"
-        required: true
-        default: 'yes'
-        type: choice
-        options:
-          - 'yes'
-          - 'no'
+
+env:
+  VERSION: 24.10.4
 
 jobs:
   build:
@@ -46,13 +41,13 @@ jobs:
         echo $CONFIG_PATH
         if [ "${{ inputs.network_settings }}" = "static" ]; then
            echo "删除网络设置-dhcp"
-           sed -i '44,105d' "$CONFIG_PATH"
+           sed -i '34,111d' "$CONFIG_PATH"
            echo "替换默认配置"
            sed -i "/ipaddr/s/192.168.5.88/${{ inputs.ipaddr }}/g" "$CONFIG_PATH"
            sed -i "/gateway/s/192.168.5.1/${{ inputs.gateway }}/g" "$CONFIG_PATH"
         else
            echo "删除网络设置-static"
-           sed -i '36,42d' "$CONFIG_PATH"
+           sed -i '26,32d' "$CONFIG_PATH"
         fi
         echo "输出配置"
         cat $CONFIG_PATH
@@ -64,7 +59,7 @@ jobs:
 
     - name: ⏬ 下载 ImageBuilder
       run: |
-        curl -L -o imagebuilder.tar.zst https://github.com/Kwonelee/iStoreOS-Actions/releases/download/iStoreOS-ImageBuilder-20250905/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst
+        curl -L -o imagebuilder.tar.zst https://github.com/Kwonelee/iStoreOS-Actions/releases/download/iStoreOS-ImageBuilder/20251128-istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst
         tar --use-compress-program=unzstd -xvf imagebuilder.tar.zst
         mv istoreos-imagebuilder-* imagebuilder
 
@@ -78,8 +73,6 @@ jobs:
         mkdir -p imagebuilder/files/etc/{uci-defaults,opkg,banner1}
         #添加开机启动脚本
         cp files/etc/uci-defaults/99-custom.sh imagebuilder/files/etc/uci-defaults/
-        #替换软件源
-        cp files/etc/opkg/distfeeds.conf imagebuilder/files/etc/opkg/
         #替换O大打包脚本的默认banner
         cp files/etc/banner imagebuilder/files/etc/banner1/
         mkdir -p imagebuilder/files/etc/openclash/core
@@ -114,9 +107,9 @@ jobs:
     - name: 🚀 上传到 Release
       uses: softprops/action-gh-release@v2.2.1
       with:
-        tag_name: iStoreOS-24.10-RELEASE-${{ inputs.network_settings }}
+        tag_name: iStoreOS-${{ env.VERSION }}-RELEASE-${{ inputs.network_settings }}
         body: |
-          📌 版本： iStoreOS-24.10.2-RELEASE（imagebuilder构建，稳定版）
+          📌 版本： iStoreOS-${{ env.VERSION }}-RELEASE（imagebuilder构建，稳定版）
           
           📂 来源： https://fw.koolcenter.com/iStoreOS/ib/armsr/
           
